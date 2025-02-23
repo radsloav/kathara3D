@@ -39,7 +39,7 @@
     <p>Myšou (drag) otáčaj, kolieskom zoomuj.</p>
   </div>
 
-  <!-- Načítame Three.js z CDN (verzia modulov) -->
+  <!-- Načítame Three.js z CDN (modulová verzia) -->
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js';
     import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/controls/OrbitControls.js';
@@ -61,4 +61,103 @@
     document.body.appendChild(renderer.domElement);
 
     // 2) OVLÁDANIE (OrbitControls)
-    const controls = new OrbitControls(camera
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
+
+    // 3) SVETLO
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.8);
+    pointLight.position.set(10, 10, 10);
+    scene.add(pointLight);
+
+    // 4) DEFINÍCIA "KATHARA GRID" – 12 sfér
+    //    V oficiálnom učení je presné rozloženie, tu ho len ilustrujeme
+    //    (napr. v 3 stĺpcoch a 4 vrstvách).
+    const spherePositions = [
+      // x, y, z
+      // Vrchná vrstva
+      { x: 0,   y: 8,  z: 0 },
+      // 3. vrstva
+      { x: -4,  y: 4,  z: 0 },
+      { x: 0,   y: 4,  z: 0 },
+      { x: 4,   y: 4,  z: 0 },
+      // 2. vrstva
+      { x: -4,  y: 0,  z: 0 },
+      { x: 0,   y: 0,  z: 0 },
+      { x: 4,   y: 0,  z: 0 },
+      // 1. vrstva
+      { x: -4,  y: -4, z: 0 },
+      { x: 0,   y: -4, z: 0 },
+      { x: 4,   y: -4, z: 0 },
+      // Spodná vrstva
+      { x: 0,   y: -8, z: 0 },
+      // BONUS: Jedna sféra napr. vpredu?
+      { x: 0,   y: 0,  z: 4 },
+    ];
+
+    // Farebná paleta
+    const colors = [
+      0xff0000, 0xff8800, 0xffcc00, 0xffff00,
+      0x88ff00, 0x00ff00, 0x00ff88, 0x00ffff,
+      0x0088ff, 0x0000ff, 0x8800ff, 0xff00ff
+    ];
+
+    // Pole pre uloženie odkazov na vytvorené objekty (ak by sme chceli manipulovať neskôr)
+    const spheres = [];
+
+    // Vytvoríme 12 sfér
+    spherePositions.forEach((pos, i) => {
+      const geometry = new THREE.SphereGeometry(0.8, 32, 32);
+      const material = new THREE.MeshPhongMaterial({
+        color: colors[i % colors.length],
+        emissive: 0x111111,
+        shininess: 50
+      });
+      const sphere = new THREE.Mesh(geometry, material);
+      sphere.position.set(pos.x, pos.y, pos.z);
+      scene.add(sphere);
+      spheres.push(sphere);
+    });
+
+    // 5) PREPOJENIA MEDZI SÉRAMI – v Kathara učení existujú linky, tu len demonštrujeme
+    //    Príklad: prepojíme sféry, ktoré sú vedľa seba v x smere alebo y smere
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+    function createLine(p1, p2) {
+      const points = [p1.clone(), p2.clone()];
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const line = new THREE.Line(geometry, lineMaterial);
+      scene.add(line);
+    }
+
+    // Jednoduchý algoritmus: ak je vzdialenosť menšia než nejaký prah, prepojíme
+    // (Len pre ukážku – v reálnom grid-e by si definoval linky presne.)
+    for (let i = 0; i < spheres.length; i++) {
+      for (let j = i + 1; j < spheres.length; j++) {
+        const dist = spheres[i].position.distanceTo(spheres[j].position);
+        if (dist < 4.5) {
+          createLine(spheres[i].position, spheres[j].position);
+        }
+      }
+    }
+
+    // 6) ANIMAČNÁ SLUČKA
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // 7) Ošetrenie zmeny veľkosti okna
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
