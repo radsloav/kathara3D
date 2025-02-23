@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kathara Grid 3D Prototype</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000; /* Čierne pozadie */
+      font-family: sans-serif;
+      color: white;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 300px;
+    }
+    #info h1 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+      color: #00bfff;
+    }
+    #info p {
+      margin: 5px 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">
+    <h1>Kathara Grid 3D</h1>
+    <p>Prototypické zobrazenie 12-sférového gridu v 3D priestore.</p>
+    <p>Myšou (drag) otáčaj, kolieskom zoomuj.</p>
+  </div>
+
+  <!-- Načítame Three.js z CDN (verzia modulov) -->
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.150.1/examples/jsm/controls/OrbitControls.js';
+
+    // 1) Vytvoríme SCÉNU, KAMERU, RENDERER
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    const camera = new THREE.PerspectiveCamera(
+      60, 
+      window.innerWidth / window.innerHeight, 
+      0.1, 
+      1000
+    );
+    camera.position.set(0, 0, 30);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // 2) OVLÁDANIE (OrbitControls)
+    const controls = new OrbitControls(camera
